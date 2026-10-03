@@ -1,3 +1,7 @@
+#ifdef CARDENZA_TARGET
+#include "cardenza/cardenza_hal.h"
+#include "cardenza/cardenza_m5_audio.h"
+#endif
 #include <SD.h>
 #include <sd_defines.h>
 #include <sd_diskio.h>
@@ -57,12 +61,40 @@ static struct DrumMachine dm; // global drum machine state
 // Initialize the Cardputer
 void initCardputer()
 {
-  auto cfg = M5.config();  
+  auto cfg = M5.config();
+#ifdef CARDENZA_TARGET
+    Serial.begin(115200);
+    const bool cardenzaCodecReady = cardenza_hal_init(32, 16);
+    cfg.fallback_board = m5::board_t::board_M5Cardputer;
+    cfg.internal_imu = false;
+#endif
   M5Cardputer.begin(cfg);
+#ifdef CARDENZA_TARGET
+    Serial.printf("[Cardenza] ES8156 %s; I2S16/32fs; no gyro/battery/WS2812; heap=%u\n",
+                  cardenzaCodecReady ? "ready" : "FAILED", ESP.getFreeHeap());
+    // Feed both ES8156 output channels. playRaw(false) mono input is duplicated by M5Unified.
+    M5Cardputer.Speaker.end();
+    auto cardenzaSpeaker = M5Cardputer.Speaker.config();
+    cardenzaSpeaker.stereo = true;
+    M5Cardputer.Speaker.config(cardenzaSpeaker);
+    if (!cardenzaCodecReady) {
+        M5Cardputer.Display.fillScreen(TFT_BLACK);
+        M5Cardputer.Display.setTextColor(TFT_RED);
+        M5Cardputer.Display.setCursor(4, 4);
+        M5Cardputer.Display.println("ES8156 INIT FAILED");
+        while (true) delay(100);
+    }
+#endif
+
   M5Cardputer.Display.startWrite();
   M5Cardputer.Display.setRotation(1);
   M5Cardputer.Speaker.setVolume(255);
-  M5Cardputer.Speaker.begin();  
+
+#ifdef CARDENZA_TARGET
+    cardenza_m5_require(M5Cardputer.Speaker.begin(),"Speaker init FAILED");
+#else
+    M5Cardputer.Speaker.begin();
+#endif
   initLittleFS();  
   initSD();
 }

@@ -111,6 +111,7 @@ std::vector<String> listFiles(const String &path)
         fileList.push_back(String(file.name()));
         file = root.openNextFile();
     }
+    return fileList;
 }
 
 /* Load a font from SPIFFS and add it to the display */
@@ -142,7 +143,12 @@ std::vector<String> filterByPrefix(const std::vector<String> &input, const Strin
 
 bool initSD()
 {
+#ifdef CARDENZA_TARGET
+    SPI.begin(40, 39, 14, 12);
+    if (!SD.begin(12, SPI, 25000000))
+#else
     if (!SD.begin())
+#endif
     {
         Serial.println("SD Card initialization failed!");
         return false;
