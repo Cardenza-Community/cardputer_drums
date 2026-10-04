@@ -15,7 +15,7 @@ static constexpr const int16_t maxFilterCutoff = 16;       // number of steps in
 static constexpr const int16_t maxChannelVolume = 16;      // number of steps in the channel volume setting
 static constexpr const float maxSampleLen = 0.5;           // maximum length in seconds of a sample
 static constexpr const int32_t SAMPLE_ARENA_SIZE = 160000; // number of samples in the kit arena (all samples are consecutive slices of this)
-static constexpr const int32_t bufferBeats = 8;            // division of a bar in one audio buffer (4 = 1/4 bar)
+extern int32_t bufferBeats; // Selected after M5.begin; shorter queue preserves SD memory.
 static constexpr const int32_t messageTime = 1000;         // time in ms to show a status message
 static constexpr const int32_t maxSamples = 27;           // maximum number of samples in a kit
 

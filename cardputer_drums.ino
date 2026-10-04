@@ -1,3 +1,5 @@
+#include "cardenza/cardenza_m5_audio.h"
+int32_t bufferBeats = 8;
 #include <SD.h>
 #include <sd_defines.h>
 #include <sd_diskio.h>
@@ -57,12 +59,20 @@ static struct DrumMachine dm; // global drum machine state
 // Initialize the Cardputer
 void initCardputer()
 {
-  auto cfg = M5.config();  
+  auto cfg = M5.config();
+    Serial.begin(115200);
   M5Cardputer.begin(cfg);
+  bufferBeats = (M5.isCardenza() || M5.getBoard()==m5::board_t::board_M5CardputerADV) ? 16 : 8;
+    if (M5.isCardenza()) {
+        Serial.printf("[Cardenza] runtime ES8156 %s; heap=%u\n", M5.cardenzaCodecReady()?"ready":"FAILED", ESP.getFreeHeap());
+        cardenza_m5_require(M5.cardenzaCodecReady(), "ES8156 INIT FAILED");
+    }
+
   M5Cardputer.Display.startWrite();
   M5Cardputer.Display.setRotation(1);
   M5Cardputer.Speaker.setVolume(255);
-  M5Cardputer.Speaker.begin();  
+
+    cardenza_m5_require(M5Cardputer.Speaker.begin(),"Speaker init FAILED");
   initLittleFS();  
   initSD();
 }

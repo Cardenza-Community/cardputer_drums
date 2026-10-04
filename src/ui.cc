@@ -110,6 +110,13 @@ void initState(DrumMachine &dm)
     // Allocate mix buffers
     createArena(&dm.sampleArena);
     allocateMix(dm);
+    if (!dm.bufferA || !dm.bufferB) {
+        Serial.printf("Mix buffer allocation FAILED; heap=%u\n",ESP.getFreeHeap());
+        M5Cardputer.Display.fillScreen(TFT_BLACK);
+        M5Cardputer.Display.setTextColor(TFT_RED);
+        M5Cardputer.Display.drawString("Not enough audio memory",0,0);
+        while (true) delay(100);
+    }
     Serial.println("Allocated mix buffers");
 
     // print free heap space
@@ -229,6 +236,7 @@ bool resetSampleAdjustments(DrumMachine &dm)
         dm.drumSamples[i].adjustments.releaseTime = 0;
         dm.drumSamples[i].adjustments.samplePtr = 0;
     }
+    return true;
 }
 
 bool loadSampleAdjustments(DrumMachine &dm, int32_t bank)
